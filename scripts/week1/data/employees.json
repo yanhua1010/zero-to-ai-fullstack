@@ -1,0 +1,7 @@
+[
+  {"id": 1, "name": "张三", "department": "后端", "salary": 25000, "skills": ["Java", "Spring", "MySQL"], "active": true},
+  {"id": 2, "name": "李四", "department": "前端", "salary": 18000, "skills": ["React", "TypeScript"], "active": true},
+  {"id": 3, "name": "王五", "department": "后端", "salary": 30000, "skills": ["Python", "Django", "PostgreSQL"], "active": false},
+  {"id": 4, "name": "赵六", "department": "数据", "salary": 28000, "skills": ["Python", "Pandas", "SQL"], "active": true},
+  {"id": 5, "name": "钱七", "department": "数据", "salary": null, "skills": [], "active": true}
+]
