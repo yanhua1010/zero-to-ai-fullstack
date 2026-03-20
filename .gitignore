@@ -30,5 +30,6 @@ build/
 # 数据文件（避免大文件入库）
 data/raw/
 data/processed/
-*.csv
 *.parquet
+# 练习用的小数据集允许提交（scripts/week*/data/）
+# 如有真实大数据文件用 data/raw/ 存放即可
