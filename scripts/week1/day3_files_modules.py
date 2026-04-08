@@ -169,6 +169,7 @@ with open(output_file, "r", encoding="utf-8-sig") as f:
     rows = list(reader)
 
 print(f"  读取到 {len(rows)} 行")
+print(f" 表头: {rows[0].keys()}")
 for row in rows:
     print(f"  {row['name']} | {row['department']} | 薪资:{row['salary']} | 技能:{row['skills']}")
 
@@ -186,6 +187,7 @@ import json as json_lib            # 别名
 
 now = datetime.now()
 print(f"  当前时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+print(f" 当前时间: {now.strftime('%Y-%m-%d')}")
 print(f"  今天: {date.today()}")
 
 # __name__ 机制：判断是直接运行还是被 import

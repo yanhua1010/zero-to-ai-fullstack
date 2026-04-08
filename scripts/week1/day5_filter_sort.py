@@ -41,6 +41,7 @@ print("\n=== 多条件筛选 ===")
 # 必须用 &（且）、|（或）、~（非），并且每个条件要加括号
 
 # & 且：电子产品 且 已完成
+res = df["category"] == "电子产品"
 result = df[(df["category"] == "电子产品") & (df["status"] == "已完成")]
 print(f"  电子产品 且 已完成：{len(result)} 条")
 print(result[["order_id", "product", "total_amount"]].to_string())

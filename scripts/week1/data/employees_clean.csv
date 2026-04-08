@@ -1,0 +1,5 @@
+﻿id,name,department,salary,skill_count,skills
+1,张三,后端,25000.0,3,Java|Spring|MySQL
+2,李四,前端,18000.0,2,React|TypeScript
+4,赵六,数据,28000.0,3,Python|Pandas|SQL
+5,钱七,数据,0.0,0,

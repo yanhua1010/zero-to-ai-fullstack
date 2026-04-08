@@ -11,9 +11,13 @@ build/
 .pytest_cache/
 .ruff_cache/
 
-# Jupyter
+# Jupyter (keep notebooks, ignore checkpoints)
 .ipynb_checkpoints/
-*.ipynb
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
 
 # 环境变量
 .env

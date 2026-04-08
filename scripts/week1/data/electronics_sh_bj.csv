@@ -1,0 +1,6 @@
+﻿order_id,customer_name,city,product,total_amount,status
+1003,张三,上海,MacBook Pro,14999.0,已完成
+1001,张三,上海,iPhone 15,6999.0,已完成
+1010,张三,上海,iPad,4999.0,已完成
+1006,李四,北京,AirPods,1299.0,已完成
+1020,张三,上海,数据线,117.0,已完成
