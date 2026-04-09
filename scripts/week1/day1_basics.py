@@ -5,7 +5,7 @@ Day 1 - Python 基础语法练习
 
 # ==================== 数据类型 ====================
 # Java: String s = "hello";  →  Python: 动态类型，不用声明
-name = "王彦华"
+name = "Yanhua"
 age = 8  # 工作年限
 languages = ["Java", "Python", "JavaScript"]  # Java: ArrayList<String>
 skills = {"backend": "Java", "years": 8}      # Java: HashMap<String, Object>

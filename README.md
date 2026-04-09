@@ -1,24 +1,34 @@
-# 🧠 AI Knowledge Base
+[中文](README.zh.md) | **English**
 
-> A self-hostable RAG-powered knowledge base — upload documents, ask questions, get answers with source citations.
+# 🧠 zero-to-ai-fullstack
+
+> A Java backend engineer's journey into AI full-stack development.
+> Building a RAG-powered knowledge base from scratch — one week at a time.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green?logo=fastapi)
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black?logo=next.js)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Status-In_Development-orange)
+![Status](https://img.shields.io/badge/Status-Week_2_In_Progress-blue)
 
-## ✨ Features
+---
 
-- 📄 **Multi-format document ingestion** — PDF, Markdown, TXT, HTML
-- 🔍 **Semantic search** — powered by pgvector and embedding models
-- 💬 **Conversational Q&A** — multi-turn dialogue with source citations
-- 🗂️ **Knowledge base management** — organize documents into separate knowledge bases
-- ⚡ **Streaming responses** — real-time answer generation via SSE
-- 🐳 **One-command deployment** — Docker Compose brings up the full stack
+## 👋 Who this is for
 
-## 🏗️ Architecture
+If you are:
+
+- A **backend developer** (Java / Go / Node) curious about AI full-stack
+- Wondering how RAG, vector databases, and LLM APIs fit together in a real project
+- Looking for a **realistic learning path** rather than another polished tutorial
+
+…then follow along. This repo documents not just the code, but the *why* behind every technical decision — written from the perspective of someone who thinks in Java and is learning to think in Python + AI.
+
+---
+
+## 🗺️ What I'm building
+
+A self-hostable, RAG-powered knowledge base:
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -37,103 +47,89 @@
 └──────────┘   └──────────────┘   └────────────┘
 ```
 
-## 🛠️ Tech Stack
+**Tech stack:** Python · FastAPI · LangChain · PostgreSQL · pgvector · Next.js · Docker
 
-| Layer    | Technology                          |
-|----------|-------------------------------------|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS |
-| Backend  | Python 3.11, FastAPI, LangChain     |
-| Database | PostgreSQL 16 + pgvector            |
-| LLM      | Claude API (Anthropic) / OpenAI API  |
-| ETL      | Pandas, custom pipeline             |
-| Deploy   | Docker Compose, GitHub Actions      |
+---
 
-## 🚀 Quick Start
+## 📅 8-Week Roadmap
 
-### Prerequisites
+| Week | Focus | Status |
+|------|-------|--------|
+| 1 | Python speed run + Claude API + Prompt Engineering | ✅ Done |
+| 2 | LangChain + document processing pipeline | 🔄 In progress |
+| 3 | PostgreSQL + pgvector + vector search | ⬜ |
+| 4 | Full RAG pipeline + FastAPI backend | ⬜ |
+| 5 | RAG optimization + evaluation | ⬜ |
+| 6 | AI feature integration into production SaaS | ⬜ |
+| 7 | Docker deployment + CI/CD | ⬜ |
+| 8 | Interview prep + start applying | ⬜ |
 
-- Docker & Docker Compose
-- An API key from [Anthropic](https://console.anthropic.com/) or [OpenAI](https://platform.openai.com/)
+---
 
-### 1. Clone the repo
+## 📓 Learning Log
 
-```bash
-git clone https://github.com/yanhua1010/ai-knowledge-base.git
-cd ai-knowledge-base
-```
+Weekly notes on what I learned, what surprised me, and how things map to my Java background.
 
-### 2. Configure environment
+→ [Read the full Learning Log](LEARNING_LOG.en.md)
 
-```bash
-cp .env.example .env
-# Edit .env and fill in your API key
-```
+**Recent entries:**
 
-### 3. Start the full stack
+- **Week 1** — Python feels familiar once you stop fighting the lack of braces. Claude API multi-turn dialogue clicked immediately — it's stateless, just like HTTP. [Read →](LEARNING_LOG.en.md#week-1)
 
-```bash
-docker compose up -d
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+---
 
 ## 📁 Project Structure
 
 ```
-ai-knowledge-base/
+zero-to-ai-fullstack/
 ├── backend/                  # Python FastAPI service
-│   ├── etl/                  # ETL pipeline (Extract → Transform → Load)
+│   ├── etl/                  # ETL pipeline
 │   │   ├── extractors/       # Document loaders (PDF, MD, TXT, HTML)
 │   │   ├── transformers/     # Text cleaning & chunking
 │   │   └── loaders/          # Database writers
 │   ├── rag/                  # RAG pipeline
 │   │   ├── embeddings/       # Embedding model wrappers
-│   │   ├── retrieval/        # Vector search & hybrid search
-│   │   └── generation/       # LLM integration & prompt management
+│   │   ├── retrieval/        # Vector + hybrid search
+│   │   └── generation/       # LLM integration & prompts
 │   ├── api/                  # FastAPI routes
-│   │   ├── documents.py
-│   │   ├── knowledge_bases.py
-│   │   └── chat.py
 │   ├── models/               # SQLAlchemy ORM models
-│   ├── prompts/              # Prompt templates (versioned)
-│   └── main.py
+│   └── prompts/              # Prompt templates (versioned)
 ├── frontend/                 # Next.js app
-│   ├── app/
-│   │   ├── knowledge-bases/  # KB management pages
-│   │   └── chat/             # Chat interface pages
-│   └── components/
-├── sql/                      # Database migration scripts (Alembic)
-├── scripts/                  # Dev utilities & data scripts
+├── scripts/                  # Weekly learning exercises
+│   ├── week1/                # Python basics + Claude API chatbot
+│   └── week2/                # LangChain + document pipeline
+├── sql/                      # Alembic migrations
 ├── docker-compose.yml
 ├── .env.example
-└── README.md
+└── LEARNING_LOG.md
 ```
-
-## 🗺️ Roadmap
-
-- [x] Week 1 — Python fundamentals & data processing basics
-- [ ] Week 2-3 — ETL pipeline (document extraction & cleaning)
-- [ ] Week 4-5 — PostgreSQL + pgvector setup & data modeling
-- [ ] Week 6-7 — LLM integration & RAG pipeline
-- [ ] Week 8-9 — FastAPI backend & streaming responses
-- [ ] Week 10 — Next.js frontend
-- [ ] Week 11 — Docker deployment & CI/CD
-- [ ] Week 12 — Polish, docs & open beta
-
-## 🤝 Contributing
-
-This project is actively under development. Contributions, issues, and feature requests are welcome!
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-*Built by [@yanhua1010](https://github.com/yanhua1010) — learning in public 🌱*
+## 🚀 Quick Start (once complete)
+
+```bash
+git clone https://github.com/yanhua1010/zero-to-ai-fullstack.git
+cd zero-to-ai-fullstack
+cp .env.example .env   # add your API key
+docker compose up -d
+# open http://localhost:3000
+```
+
+*Full deployment guide coming in Week 7.*
+
+---
+
+## 💬 About me
+
+8 years as a Java backend engineer. Built distributed systems, high-concurrency services, and data pipelines — all in Java/Spring. Now learning the AI full-stack: Python, FastAPI, RAG, pgvector, LangChain, Next.js.
+
+Following along? Hit **Watch** to get notified of weekly updates, or open an issue if you have questions.
+
+→ [GitHub: @yanhua1010](https://github.com/yanhua1010)
+
+---
+
+## 📄 License
+
+MIT
