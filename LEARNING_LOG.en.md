@@ -67,7 +67,49 @@ Two Prompt Engineering techniques applied:
 
 **Focus:** LangChain + document processing pipeline
 
-*In progress...*
+### What I learned
+
+**Day 8 — LangChain basics**
+
+LangChain's core design is composable components connected with the `|` operator — like `prompt | llm | output_parser`, similar to Unix pipes. It looked strange at first, but once it clicked it felt elegant: each component does one thing, and you combine them to handle complex tasks.
+
+Three core components covered:
+
+- **ChatAnthropic**: wraps the Anthropic SDK so you can swap models by changing one line without touching any chain logic
+- **PromptTemplate**: manages prompts with variable placeholders instead of manual string concatenation — essential for RAG where every query needs "user question + retrieved documents" assembled into a prompt
+- **Document Loader**: loads files into `Document` objects with a unified format; all downstream processing works on this object
+
+Compared to using the `anthropic` SDK directly last week: there's an extra abstraction layer — more flexibility, but also more black-box behavior. Current judgment: LangChain's basic components (Loader, Splitter, Embeddings, VectorStore) are worth using; higher-level abstractions (Agent, LangGraph) I'll skip for now.
+
+**Day 9 — Text splitting**
+
+Text splitting is one of the highest-impact steps in a RAG pipeline. Two core parameters clarified:
+
+- **chunk_size**: max characters per chunk. Too large → noisy retrieval, wasted LLM context; too small → incomplete semantics, inaccurate retrieval
+- **chunk_overlap**: overlap between adjacent chunks. Key information might land exactly on a chunk boundary; overlap ensures boundary content is complete in at least one chunk
+
+`RecursiveCharacterTextSplitter` splits in priority order: `\n\n` → `\n` → ` ` → `""`, preserving paragraph structure wherever possible — the right default for RAG.
+
+Did a comparison experiment: printed `chunk_overlap=0` vs `chunk_overlap=40` side by side and visually inspected the boundaries. Seeing the difference directly was much more effective than reading documentation.
+
+PDF loading detail: `PyPDFLoader` splits by page, each page becomes a `Document`, and the metadata includes the `page` number. After chunking, every chunk's metadata carries "from page N" — exactly what you need to show source citations in the final RAG UI.
+
+### Java / prior knowledge → new concept mapping
+
+| Prior concept | New concept | Notes |
+|---------------|-------------|-------|
+| Spring `@Bean` composition | LangChain `\|` pipeline | Both wire components together, different syntax |
+| MyBatis ResultMap | `Document` object | Unified data carrier format |
+| Sharding strategy (分库分表) | chunk_size selection | Both balance granularity vs performance |
+
+### Still fuzzy on
+
+- How to determine the optimal `chunk_size`? Currently using 500 by feel — need to test systematically when building the RAG evaluation set in Week 5
+- How well does `RecursiveCharacterTextSplitter` handle Chinese? It splits by character count, and Chinese is one character per semantic unit, but natural language boundaries differ from English
+
+### Code from this week
+
+→ [`scripts/week2/`](scripts/week2/)
 
 ---
 

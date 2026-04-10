@@ -67,7 +67,49 @@
 
 **重点**：LangChain + 文档处理管道
 
-*进行中...*
+### 学到了什么
+
+**Day 8 — LangChain 基础**
+
+LangChain 的核心设计是把各个组件做成可以用 `|` 串联的管道，比如 `prompt | llm | output_parser`，就像 Linux 管道符。第一次看到这个语法有点懵，但理解了之后觉得很优雅——每个组件只做一件事，组合起来完成复杂任务。
+
+三个核心组件：
+
+- **ChatAnthropic**：对 Anthropic SDK 的封装，好处是后续切换模型只改一行，Chain 逻辑完全不动
+- **PromptTemplate**：用变量占位符管理 Prompt，避免手动字符串拼接出错。RAG 里每次都要把"问题 + 检索到的文档"拼成 Prompt，这个东西很有必要
+- **Document Loader**：把文件加载成 `Document` 对象，统一格式，后续所有处理都基于这个对象
+
+和上周直接用 `anthropic` SDK 的区别：多了一层封装，灵活性更高，但也多了一层黑盒。目前的判断是：LangChain 的基础组件（Loader、Splitter、Embeddings、VectorStore）值得用，但高级抽象（Agent、LangGraph）暂时不碰。
+
+**Day 9 — 文本分块**
+
+文本分块是 RAG 里最影响效果的环节之一，今天搞清楚了两个核心参数的意义：
+
+- **chunk_size**：每块的最大字符数。太大 → 检索时噪音多，LLM 上下文浪费；太小 → 语义不完整，检索不准
+- **chunk_overlap**：相邻块的重叠字符数。关键信息可能刚好落在块的边界上，重叠保证边界处的内容至少在某一块里是完整的
+
+`RecursiveCharacterTextSplitter` 的分割优先级：`\n\n` → `\n` → ` ` → `""`，尽量保留段落完整性，是 RAG 场景的首选。
+
+做了一个对比实验——把 `chunk_overlap=0` 和 `chunk_overlap=40` 的结果并排打印，肉眼能看到边界处的差异。这个实验比只看文档描述理解深多了。
+
+PDF 加载有个细节：`PyPDFLoader` 是按页分割的，每页是一个 `Document`，`metadata` 里会带 `page` 编号。加上分块后，每个 chunk 的 metadata 里就有了"来自第几页"的信息，后续 RAG 展示引用来源时直接用。
+
+### Java / 旧知识 → 新知识的对应
+
+| 旧概念 | 新概念 | 说明 |
+|--------|--------|------|
+| Spring `@Bean` 组合 | LangChain `\|` 管道 | 都是把组件串联，只是语法不同 |
+| MyBatis ResultMap | `Document` 对象 | 统一格式的数据载体 |
+| 分库分表的分片策略 | chunk_size 选择 | 都是在"粒度"和"性能"之间权衡 |
+
+### 还没搞清楚的
+
+- `chunk_size` 的最优值怎么确定？现在是凭感觉设 500，第五周做 RAG 评测的时候需要系统测一下
+- `RecursiveCharacterTextSplitter` 对中文支持如何？它按字符数切，中文一个字也是一个字符，但语义边界和英文不一样
+
+### 本周代码
+
+→ [`scripts/week2/`](scripts/week2/)
 
 ---
 
