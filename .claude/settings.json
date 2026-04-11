@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show:*)",
+      "Bash(python scripts/week2/embeddings.py)",
+      "Bash(python -c \"from langchain_openai import OpenAIEmbeddings; import inspect; print\\(inspect.signature\\(OpenAIEmbeddings.__init__\\)\\)\")",
+      "Bash(python -c \"from langchain_openai import OpenAIEmbeddings; help\\(OpenAIEmbeddings\\)\")",
+      "Bash(python -c ':*)"
+    ]
+  }
+}
