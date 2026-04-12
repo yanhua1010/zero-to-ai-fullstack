@@ -1,0 +1,54 @@
+[project]
+name = "zero-to-ai-fullstack"
+version = "0.1.0"
+description = "A production-grade RAG knowledge base system built from scratch"
+requires-python = ">=3.11"
+
+dependencies = [
+    # Web framework
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+
+    # Database
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    "psycopg2-binary>=2.9.9",
+    "pgvector>=0.2.5",
+
+    # LLM & RAG
+    "anthropic>=0.25.0",
+    "openai>=1.30.0",
+    "langchain>=0.2.0",
+    "langchain-anthropic>=0.1.0",
+    "langchain-community>=0.2.0",
+    "langchain-openai>=0.1.0",
+    "langchain-text-splitters>=0.2.0",
+
+    # Document processing
+    "pypdf>=4.0.0",
+    "beautifulsoup4>=4.12.0",
+    "unstructured>=0.14.0",
+
+    # Data processing
+    "pandas>=2.0.0",
+    "numpy>=1.26.0",
+
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.0.0",
+    "httpx>=0.27.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["backend"]
+asyncio_mode = "auto"

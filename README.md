@@ -1,34 +1,20 @@
 [中文](README.zh.md) | **English**
 
-# 🧠 zero-to-ai-fullstack
+# zero-to-ai-fullstack
 
-> A Java backend engineer's journey into AI full-stack development.
-> Building a RAG-powered knowledge base from scratch — one week at a time.
+A Java backend engineer's attempt at AI full-stack. Building a RAG knowledge base from scratch, one week at a time.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green?logo=fastapi)
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black?logo=next.js)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Status-Week_2_Core_Complete-brightgreen)
 
 ---
 
-## 👋 Who this is for
+## What I'm building
 
-If you are:
-
-- A **backend developer** (Java / Go / Node) curious about AI full-stack
-- Wondering how RAG, vector databases, and LLM APIs fit together in a real project
-- Looking for a **realistic learning path** rather than another polished tutorial
-
-…then follow along. This repo documents not just the code, but the *why* behind every technical decision — written from the perspective of someone who thinks in Java and is learning to think in Python + AI.
-
----
-
-## 🗺️ What I'm building
-
-A self-hostable, RAG-powered knowledge base:
+A self-hostable RAG knowledge base: upload documents, ask questions, get answers with source citations.
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -47,11 +33,11 @@ A self-hostable, RAG-powered knowledge base:
 └──────────┘   └──────────────┘   └────────────┘
 ```
 
-**Tech stack:** Python · FastAPI · LangChain · PostgreSQL · pgvector · Next.js · Docker
+Stack: Python · FastAPI · LangChain · PostgreSQL · pgvector · Next.js · Docker
 
 ---
 
-## 📅 8-Week Roadmap
+## 8-Week Roadmap
 
 | Week | Focus | Status |
 |------|-------|--------|
@@ -66,9 +52,9 @@ A self-hostable, RAG-powered knowledge base:
 
 ---
 
-## 📓 Learning Log
+## Learning Log
 
-Weekly notes on what I learned, what surprised me, and how things map to my Java background.
+Weekly notes on what clicked, what didn't, and how it maps to my Java background.
 
 → [Read the full Learning Log](LEARNING_LOG.en.md)
 
@@ -78,7 +64,7 @@ Weekly notes on what I learned, what surprised me, and how things map to my Java
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 zero-to-ai-fullstack/
@@ -106,30 +92,35 @@ zero-to-ai-fullstack/
 
 ---
 
-## 🚀 Quick Start (once complete)
+## Quick Start
 
 ```bash
 git clone https://github.com/yanhua1010/zero-to-ai-fullstack.git
 cd zero-to-ai-fullstack
-cp .env.example .env   # add your API key
+cp .env.example .env
+
+# Install dependencies (requires uv)
+uv sync
+
+# Start backend
+uv run uvicorn backend.main:app --reload
+
+# Or with Docker (Week 7+)
 docker compose up -d
-# open http://localhost:3000
 ```
 
-*Full deployment guide coming in Week 7.*
+Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ---
 
-## 💬 About me
+## About
 
-8 years as a Java backend engineer. Built distributed systems, high-concurrency services, and data pipelines — all in Java/Spring. Now learning the AI full-stack: Python, FastAPI, RAG, pgvector, LangChain, Next.js.
+8 years as a Java backend engineer. Built distributed systems, high-concurrency services, data pipelines — all in Java/Spring. Now doing the AI full-stack thing.
 
-Following along? Hit **Watch** to get notified of weekly updates, or open an issue if you have questions.
+Following along? Hit **Watch** for weekly updates, or open an issue if you have questions.
 
 → [GitHub: @yanhua1010](https://github.com/yanhua1010)
 
 ---
 
-## 📄 License
-
-MIT
+MIT License
