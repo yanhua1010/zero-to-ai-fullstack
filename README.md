@@ -10,7 +10,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black?logo=next.js)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Status-Week_2_In_Progress-blue)
+![Status](https://img.shields.io/badge/Status-Week_2_Core_Complete-brightgreen)
 
 ---
 
@@ -56,7 +56,7 @@ A self-hostable, RAG-powered knowledge base:
 | Week | Focus | Status |
 |------|-------|--------|
 | 1 | Python speed run + Claude API + Prompt Engineering | ✅ Done |
-| 2 | LangChain + document processing pipeline | 🔄 In progress |
+| 2 | LangChain + document processing pipeline | ✅ Done |
 | 3 | PostgreSQL + pgvector + vector search | ⬜ |
 | 4 | Full RAG pipeline + FastAPI backend | ⬜ |
 | 5 | RAG optimization + evaluation | ⬜ |

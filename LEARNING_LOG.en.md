@@ -94,22 +94,84 @@ Did a comparison experiment: printed `chunk_overlap=0` vs `chunk_overlap=40` sid
 
 PDF loading detail: `PyPDFLoader` splits by page, each page becomes a `Document`, and the metadata includes the `page` number. After chunking, every chunk's metadata carries "from page N" — exactly what you need to show source citations in the final RAG UI.
 
+**Day 10 — Embedding & vectorization**
+
+The core experience today was validating "semantic similarity" hands-on. Used `text-embedding-3-small` to convert text into 1536-dimensional vectors, then hand-wrote a cosine similarity function to calculate distances.
+
+Results were striking:
+- "什么是向量数据库？" vs "向量数据库用来存储和查询高维向量" → similarity 0.92
+- "什么是向量数据库？" vs "今天天气真不错，适合出去散步" → similarity 0.15
+
+Only then did it click: RAG doesn't work through keyword matching (neither sentence contains the exact phrase "数据库"), but by finding neighbors in semantic space. Embedding solves the fundamental problem: **expressing "semantic closeness" (an intuition from human cognition) as mathematical distance**.
+
+Skills from years ago (cosine similarity, vector transformations, high-dimensional space) suddenly have real-world application. None of that learning was wasted.
+
+**Day 11 — Vector storage + semantic retrieval + mini RAG**
+
+Day 11's task completed the full RAG loop. Used Chroma (in-memory vector store) to execute this flow:
+
+```
+Document chunk list
+  → Chroma.from_documents() auto-embeds + stores
+  → vectorstore.similarity_search(query, k=3) retrieves top-3 chunks
+  → concatenate chunks into context
+  → send to Claude for generation
+```
+
+Key insight: **RAG is not mysterious — it's just "retrieve relevant documents + augment LLM's context with those documents"**. All prior work (chunking, embedding) was infrastructure for doing retrieval efficiently.
+
+Design note: Day 11 uses Chroma (zero-config, in-memory) instead of pgvector directly, because Chroma has no setup overhead. Week 3 will swap Chroma for pgvector (persistent storage), but the logic is identical — this design separates concept learning from engineering complexity.
+
 ### Java / prior knowledge → new concept mapping
 
 | Prior concept | New concept | Notes |
 |---------------|-------------|-------|
 | Spring `@Bean` composition | LangChain `\|` pipeline | Both wire components together, different syntax |
 | MyBatis ResultMap | `Document` object | Unified data carrier format |
-| Sharding strategy (分库分表) | chunk_size selection | Both balance granularity vs performance |
+| Sharding strategy | chunk_size selection | Both balance granularity vs performance |
 
 ### Still fuzzy on
 
 - How to determine the optimal `chunk_size`? Currently using 500 by feel — need to test systematically when building the RAG evaluation set in Week 5
 - How well does `RecursiveCharacterTextSplitter` handle Chinese? It splits by character count, and Chinese is one character per semantic unit, but natural language boundaries differ from English
 
+**Days 12-14 — ETL pipeline integration**
+
+Everything from the past two weeks came together into a complete pipeline:
+
+```
+Upload → Format detection → Text extraction → Chunking → Vectorization → Ready for storage
+```
+
+Three modules, three responsibilities:
+
+- **DocumentExtractor** (`extractors.py`): only reads raw files. Uses the appropriate LangChain Loader for each format (PDF/MD/TXT) and returns a unified `{"content": str, "metadata": dict}` format. **No chunking, no vectorization.**
+- **TextTransformer** (`transformers.py`): takes Extractor output, splits with `RecursiveCharacterTextSplitter` (chunk_size=500 / overlap=50), then embeds each chunk. Outputs text + vector + metadata for every chunk.
+- **ETLPipeline** (`pipeline.py`): the orchestration layer. Calls `get_extractor(file_path)` for automatic format detection → calls `transformer.transform()` to complete the conversion, chaining both steps.
+
+The layered design is the most important engineering decision of the week: each layer has a single responsibility, so wiring in pgvector (Week 3) just means adding a Load step to the pipeline — Extractor and Transformer stay unchanged.
+
+**Fallback embedding design**: TextTransformer uses a local `_LocalEmbeddings` implementation instead of calling a real API. It generates deterministic 1536-dimensional vectors from SHA256 hashes. This is a pragmatic engineering choice: you shouldn't pay API costs every time you run tests during development, but the interface is identical to the real API — switching to production is one config change.
+
+### Java / prior knowledge → new concept mapping
+
+| Prior concept | New concept | Notes |
+|---------------|-------------|-------|
+| Spring `@Bean` composition | LangChain `\|` pipeline | Wire components together, different syntax |
+| MyBatis ResultMap | `Document` object | Unified data carrier format |
+| Sharding strategy | chunk_size selection | Both balance granularity vs performance |
+| Spring layered architecture | ETL Extract/Transform/Load | Single responsibility, interface decoupling |
+
+### Key takeaway
+
+This week completed the shift from "code that works" to "a working system." Days 8-9 built the loading and chunking pipeline, Days 10-11 turned chunks into a queryable vector store and closed the RAG loop, and Days 12-14 assembled all of that into a production-grade ETL pipeline.
+
+The most visceral experience remains Day 10's manual cosine similarity calculation — seeing 0.92 between semantically related sentences and 0.15 for an unrelated one is when vector search stopped being abstract and started being a tool.
+
 ### Code from this week
 
-→ [`scripts/week2/`](scripts/week2/)
+→ [`scripts/week2/`](scripts/week2/) — learning scripts
+→ [`backend/etl/`](backend/etl/) — production ETL pipeline
 
 ---
 

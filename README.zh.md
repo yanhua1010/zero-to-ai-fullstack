@@ -10,7 +10,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black?logo=next.js)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/状态-第二周进行中-blue)
+![Status](https://img.shields.io/badge/状态-第二周核心完成-brightgreen)
 
 ---
 
@@ -56,7 +56,7 @@
 | 周次 | 重点 | 状态 |
 |------|------|------|
 | 第 1 周 | Python 速通 + Claude API + Prompt Engineering | ✅ 完成 |
-| 第 2 周 | LangChain + 文档处理管道 | 🔄 进行中 |
+| 第 2 周 | LangChain + Embedding + 向量检索 | ✅ 核心完成 |
 | 第 3 周 | PostgreSQL + pgvector + 向量检索 | ⬜ |
 | 第 4 周 | 完整 RAG Pipeline + FastAPI 后端 | ⬜ |
 | 第 5 周 | RAG 优化 + 质量评测 | ⬜ |

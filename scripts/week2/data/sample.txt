@@ -1,0 +1,3 @@
+这是一个用于测试 TextExtractor 的示例文本文件。
+Hello, this is a plain text document.
+第三行内容。
