@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>向量距离三兄弟</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #0f1117; color: #e0e0e0; }
+  h1 { text-align: center; padding: 28px 0 8px; font-size: 1.5rem; color: #fff; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 32px; font-size: 0.9rem; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 0 32px 40px; }
+  .card { background: #1a1d27; border-radius: 16px; padding: 24px; border: 1px solid #2a2d3a; }
+  .card h2 { font-size: 1.05rem; margin-bottom: 4px; }
+  .card .op { font-family: monospace; font-size: 1.3rem; color: #64b5f6; margin-bottom: 4px; }
+  .card .tagline { font-size: 0.78rem; color: #aaa; margin-bottom: 16px; }
+  canvas { display: block; margin: 0 auto; }
+  .formula { background: #12141e; border-radius: 8px; padding: 10px 14px; margin-top: 14px;
+             font-family: monospace; font-size: 0.82rem; color: #ce93d8; line-height: 1.7; }
+  .insight { margin-top: 12px; font-size: 0.82rem; color: #b0bec5; line-height: 1.6; }
+  .insight b { color: #fff; }
+  .slider-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 0.8rem; color: #aaa; }
+  input[type=range] { flex: 1; accent-color: #64b5f6; }
+  .scenario { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+              padding: 0 32px 48px; }
+  .sc-card { background: #1a1d27; border-radius: 12px; padding: 16px;
+             border: 1px solid #2a2d3a; font-size: 0.82rem; }
+  .sc-card h3 { font-size: 0.9rem; margin-bottom: 8px; color: #fff; }
+  .sc-card .winner { display: inline-block; padding: 2px 8px; border-radius: 20px;
+                     background: #1b5e20; color: #a5d6a7; font-size: 0.75rem; margin-bottom: 8px; }
+  .sc-card p { color: #aaa; line-height: 1.6; }
+  .section-title { padding: 0 32px 14px; font-size: 1rem; color: #888; }
+</style>
+</head>
+<body>
+
+<h1>向量距离三兄弟</h1>
+<p class="subtitle">拖动滑块，实时感受欧氏距离、余弦距离、内积的差异</p>
+
+<div class="grid">
+
+  <!-- ① 欧氏距离 -->
+  <div class="card">
+    <div class="op">&lt;-&gt;</div>
+    <h2>欧氏距离（L2）</h2>
+    <p class="tagline">两点之间直线距离</p>
+    <canvas id="c1" width="260" height="260"></canvas>
+    <div class="slider-row">
+      <span>B 幅度</span>
+      <input type="range" id="s1" min="20" max="110" value="70">
+    </div>
+    <div class="formula">
+      dist = √ Σ(aᵢ - bᵢ)²<br>
+      关注：<b style="color:#ef9a9a">位置差异</b>（绝对坐标）
+    </div>
+    <div class="insight">
+      <b>核心：</b>两向量端点的空间距离。<br>
+      长度 & 方向都影响结果。<br>
+      <b>适用：</b>图像像素差异、地理坐标距离
+    </div>
+  </div>
+
+  <!-- ② 余弦距离 -->
+  <div class="card">
+    <div class="op">&lt;=&gt;</div>
+    <h2>余弦距离</h2>
+    <p class="tagline">只看方向，无视长度</p>
+    <canvas id="c2" width="260" height="260"></canvas>
+    <div class="slider-row">
+      <span>夹角</span>
+      <input type="range" id="s2" min="0" max="170" value="45">
+    </div>
+    <div class="formula">
+      cos_sim = (A·B) / (|A||B|)<br>
+      cos_dist = 1 - cos_sim<br>
+      关注：<b style="color:#ef9a9a">方向差异</b>（夹角）
+    </div>
+    <div class="insight">
+      <b>核心：</b>两向量夹角的余弦值。<br>
+      长度缩放不影响结果。<br>
+      <b>适用：</b>文本语义相似度（TF-IDF / Embedding）
+    </div>
+  </div>
+
+  <!-- ③ 内积 -->
+  <div class="card">
+    <div class="op">&lt;#&gt;</div>
+    <h2>内积（Dot Product）</h2>
+    <p class="tagline">方向 + 长度都算分</p>
+    <canvas id="c3" width="260" height="260"></canvas>
+    <div class="slider-row">
+      <span>B 方向</span>
+      <input type="range" id="s3" min="0" max="359" value="135">
+    </div>
+    <div class="formula">
+      dot = Σ aᵢ·bᵢ = |A||B|cosθ<br>
+      关注：<b style="color:#ef9a9a">方向 × 幅度</b>（综合）
+    </div>
+    <div class="insight">
+      <b>核心：</b>夹角越小、长度越大，得分越高。<br>
+      pgvector 用 <b>负内积</b> 排序（因为越大越好）。<br>
+      <b>适用：</b>推荐系统、归一化向量场景
+    </div>
+  </div>
+
+</div>
+
+<p class="section-title">场景对比：同一批向量，三种距离给出不同答案</p>
+<div class="scenario">
+  <div class="sc-card">
+    <h3>场景 A：长度差异大，方向相同</h3>
+    <span class="winner">余弦最靠谱</span>
+    <p>A = [1, 1]，B = [10, 10]<br>
+    方向完全相同（夹角=0°）<br><br>
+    <b>欧氏：</b>dist ≈ 12.7 → 认为很远 ❌<br>
+    <b>余弦：</b>dist = 0 → 完全相同 ✅<br>
+    <b>内积：</b>= 20 → 高分 ✅</p>
+  </div>
+  <div class="sc-card">
+    <h3>场景 B：长度相同，方向不同</h3>
+    <span class="winner">三者结论一致</span>
+    <p>A = [1, 0]，B = [0, 1]<br>
+    夹角 = 90°，长度都为 1<br><br>
+    <b>欧氏：</b>dist = √2 ≈ 1.41<br>
+    <b>余弦：</b>dist = 1（cos90°=0）<br>
+    <b>内积：</b>= 0（正交，无关）</p>
+  </div>
+  <div class="sc-card">
+    <h3>场景 C：归一化向量</h3>
+    <span class="winner">三者等价</span>
+    <p>所有向量 |v| = 1（单位向量）<br>
+    归一化后 L2² = 2(1−cosθ)<br><br>
+    <b>欧氏、余弦、内积</b>排序结果<br>
+    完全一致 ✅<br><br>
+    OpenAI text-embedding 默认归一化</p>
+  </div>
+</div>
+
+<script>
+// ─── 工具函数 ───────────────────────────────────────────────
+function clearCanvas(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#12141e";
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawAxes(ctx, cx, cy, r) {
+  ctx.strokeStyle = "#2a2d3a";
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+}
+
+function drawVec(ctx, cx, cy, vx, vy, color, label) {
+  const ex = cx + vx, ey = cy - vy;
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
+  // 箭头
+  const angle = Math.atan2(ey - cy, ex - cx);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(ex, ey);
+  ctx.lineTo(ex - 10*Math.cos(angle-0.4), ey - 10*Math.sin(angle-0.4));
+  ctx.lineTo(ex - 10*Math.cos(angle+0.4), ey - 10*Math.sin(angle+0.4));
+  ctx.closePath(); ctx.fill();
+  // 标签
+  ctx.fillStyle = color; ctx.font = "bold 14px monospace";
+  ctx.fillText(label, ex + 8, ey - 6);
+}
+
+function drawPoint(ctx, x, y, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+}
+
+function drawDashedLine(ctx, x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawArc(ctx, cx, cy, r, a1, a2, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, r, a1, a2, false); ctx.stroke();
+}
+
+// ─── Canvas 1：欧氏距离 ───────────────────────────────────────
+const cv1 = document.getElementById("c1");
+const ctx1 = cv1.getContext("2d");
+const sl1 = document.getElementById("s1");
+
+function drawL2() {
+  const W = cv1.width, H = cv1.height;
+  const cx = W/2, cy = H/2;
+  clearCanvas(ctx1, W, H);
+  drawAxes(ctx1, cx, cy, 110);
+
+  const ax = 80, ay = 60;          // A 固定
+  const bMag = parseFloat(sl1.value);
+  const bx = bMag * Math.cos(Math.PI * 0.85);
+  const by = bMag * Math.sin(Math.PI * 0.45);
+
+  drawVec(ctx1, cx, cy, ax, ay, "#64b5f6", "A");
+  drawVec(ctx1, cx, cy, bx, by, "#ef9a9a", "B");
+
+  // 端点
+  const epAx = cx + ax, epAy = cy - ay;
+  const epBx = cx + bx, epBy = cy - by;
+  drawPoint(ctx1, epAx, epAy, "#64b5f6");
+  drawPoint(ctx1, epBx, epBy, "#ef9a9a");
+
+  // 直线距离
+  drawDashedLine(ctx1, epAx, epAy, epBx, epBy, "#ffd54f");
+
+  // 距离值
+  const dist = Math.sqrt((ax-bx)**2 + (ay-by)**2).toFixed(2);
+  ctx1.fillStyle = "#ffd54f"; ctx1.font = "12px monospace";
+  const mx = (epAx + epBx)/2 + 6, my = (epAy + epBy)/2 - 6;
+  ctx1.fillText(`d = ${dist}`, mx, my);
+
+  // 差向量
+  ctx1.strokeStyle = "#ffd54f44"; ctx1.lineWidth = 1;
+  ctx1.setLineDash([3,3]);
+  ctx1.beginPath(); ctx1.moveTo(epAx, epAy); ctx1.lineTo(epAx, epBy); ctx1.stroke();
+  ctx1.beginPath(); ctx1.moveTo(epAx, epBy); ctx1.lineTo(epBx, epBy); ctx1.stroke();
+  ctx1.setLineDash([]);
+  ctx1.fillStyle = "#ffd54f88"; ctx1.font = "11px monospace";
+  ctx1.fillText(`Δx=${Math.abs(ax-bx).toFixed(1)}`, (epAx+epBx)/2, epBy + 14);
+  ctx1.fillText(`Δy=${Math.abs(ay-by).toFixed(1)}`, epAx + 4, (epAy+epBy)/2);
+}
+sl1.addEventListener("input", drawL2);
+drawL2();
+
+
+// ─── Canvas 2：余弦距离 ───────────────────────────────────────
+const cv2 = document.getElementById("c2");
+const ctx2 = cv2.getContext("2d");
+const sl2 = document.getElementById("s2");
+
+function drawCos() {
+  const W = cv2.width, H = cv2.height;
+  const cx = W/2, cy = H/2;
+  clearCanvas(ctx2, W, H);
+  drawAxes(ctx2, cx, cy, 110);
+
+  const mag = 95;
+  const angleA = Math.PI * 0.18;                        // A 固定
+  const angleDeg = parseFloat(sl2.value);
+  const angleB = angleA + angleDeg * Math.PI / 180;     // B 随滑块
+
+  const ax = mag * Math.cos(angleA), ay = mag * Math.sin(angleA);
+  const bx = (mag * 0.7) * Math.cos(angleB), by = (mag * 0.7) * Math.sin(angleB);
+
+  // drawVec 内部 ey = cy - vy，传入正 ay 即可让向量朝上
+  drawVec(ctx2, cx, cy, ax, ay, "#64b5f6", "A");
+  drawVec(ctx2, cx, cy, bx, by, "#ef9a9a", "B");
+
+  // 夹角弧：canvas 中 y 朝下，所以角度取负
+  const a1 = -angleA, a2 = -angleB;
+  const arcR = 36;
+  drawArc(ctx2, cx, cy, arcR, Math.min(a1, a2), Math.max(a1, a2), "#ffd54f");
+
+  // θ 标签放在两向量夹角中间
+  const midAngle = (a1 + a2) / 2;
+  const labelR = 50;
+  ctx2.fillStyle = "#ffd54f"; ctx2.font = "12px monospace";
+  ctx2.fillText(`θ=${angleDeg}°`,
+    cx + labelR * Math.cos(midAngle) + 4,
+    cy + labelR * Math.sin(midAngle) - 4);
+
+  // 余弦值
+  const cosVal = Math.cos(angleDeg * Math.PI / 180).toFixed(4);
+  const cosDist = (1 - parseFloat(cosVal)).toFixed(4);
+  ctx2.fillStyle = "#a5d6a7"; ctx2.font = "12px monospace";
+  ctx2.fillText(`cos = ${cosVal}`, cx - 100, cy + 90);
+  ctx2.fillStyle = "#ffd54f";
+  ctx2.fillText(`dist = ${cosDist}`, cx - 100, cy + 106);
+
+  // 投影虚线（A 在 B 上的投影）
+  const dot = ax * bx + ay * by;
+  const bLen2 = bx*bx + by*by;
+  const projX = dot/bLen2 * bx, projY = dot/bLen2 * by;
+  drawDashedLine(ctx2, cx+ax, cy-ay, cx+projX, cy-projY, "#64b5f644");
+  ctx2.fillStyle = "#64b5f688"; ctx2.font = "10px monospace";
+  ctx2.fillText("proj", cx + projX + 4, cy - projY - 4);
+}
+sl2.addEventListener("input", drawCos);
+drawCos();
+
+
+// ─── Canvas 3：内积 ───────────────────────────────────────────
+const cv3 = document.getElementById("c3");
+const ctx3 = cv3.getContext("2d");
+const sl3 = document.getElementById("s3");
+
+function drawDot() {
+  const W = cv3.width, H = cv3.height;
+  const cx = W/2, cy = H/2;
+  clearCanvas(ctx3, W, H);
+  drawAxes(ctx3, cx, cy, 110);
+
+  const ax = 85, ay = 55;          // A 固定，长度约 101
+  const bMag = 75;                  // B 长度固定，方向随滑块
+  const bAngle = parseFloat(sl3.value) * Math.PI / 180;
+  const bx = bMag * Math.cos(bAngle), by = bMag * Math.sin(bAngle);
+
+  drawVec(ctx3, cx, cy, ax, ay, "#64b5f6", "A");
+  drawVec(ctx3, cx, cy, bx, by, "#ef9a9a", "B");
+
+  // 内积 = A·B
+  const dot = ax * bx + ay * by;
+
+  // 夹角
+  const magA = Math.sqrt(ax*ax + ay*ay);
+  const magB = Math.sqrt(bx*bx + by*by);
+  const cosTheta = dot / (magA * magB);
+  const thetaDeg = (Math.acos(Math.max(-1, Math.min(1, cosTheta))) * 180 / Math.PI).toFixed(1);
+
+  // 投影
+  const projLen = dot / magB;
+  const bUnit = [bx/magB, by/magB];
+  const projX = projLen * bUnit[0], projY = projLen * bUnit[1];
+  drawDashedLine(ctx3, cx + ax, cy - ay, cx + projX, cy - projY, "#ce93d844");
+
+  // 面积矩形（内积 = |A|cosθ × |B|，用矩形示意）
+  if (dot > 0) {
+    ctx3.fillStyle = "#ce93d822";
+    ctx3.beginPath();
+    ctx3.moveTo(cx, cy);
+    ctx3.lineTo(cx + projX, cy - projY);
+    ctx3.lineTo(cx + projX + (bx - projX)*0.15, cy - projY - (by - projY)*0.15);
+    ctx3.lineTo(cx + (bx - projX)*0.15, cy - (by - projY)*0.15);
+    ctx3.closePath(); ctx3.fill();
+  }
+
+  // 夹角弧：始终走短路（< 180°）
+  const aA = Math.atan2(-ay, ax);   // canvas 角度（y 朝下，所以取反）
+  const aB = Math.atan2(-by, bx);
+  let diff = aB - aA;
+  // 归一化到 [-π, π]，保证走短弧
+  while (diff >  Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  ctx3.strokeStyle = "#ffd54f"; ctx3.lineWidth = 1.5;
+  ctx3.beginPath();
+  ctx3.arc(cx, cy, 34, aA, aA + diff, diff < 0);
+  ctx3.stroke();
+
+  // θ 标签放在夹角中线上
+  const midA = aA + diff / 2;
+  const lr = 52;
+  ctx3.fillStyle = "#ffd54f"; ctx3.font = "12px monospace";
+  ctx3.fillText(`θ = ${thetaDeg}°`,
+    cx + lr * Math.cos(midA) + 4,
+    cy + lr * Math.sin(midA) - 4);
+
+  ctx3.fillStyle = "#ce93d8"; ctx3.font = "12px monospace";
+  ctx3.fillText(`|A|= ${magA.toFixed(1)}`, cx - 110, cy + 88);
+  ctx3.fillText(`|B|= ${magB.toFixed(1)}`, cx - 110, cy + 104);
+
+  const dotColor = dot >= 0 ? "#a5d6a7" : "#ef9a9a";
+  ctx3.fillStyle = dotColor;
+  ctx3.fillText(`A·B = ${dot.toFixed(1)}`, cx + 10, cy + 96);
+
+  // pgvector 说明
+  ctx3.fillStyle = "#888"; ctx3.font = "10px monospace";
+  ctx3.fillText("pgvector 用 <#> 负内积排序", cx - 108, cy + 120);
+}
+sl3.addEventListener("input", drawDot);
+drawDot();
+</script>
+</body>
+</html>

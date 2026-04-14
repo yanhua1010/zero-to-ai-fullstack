@@ -43,7 +43,7 @@ Stack: Python · FastAPI · LangChain · PostgreSQL · pgvector · Next.js · Do
 |------|-------|--------|
 | 1 | Python speed run + Claude API + Prompt Engineering | ✅ Done |
 | 2 | LangChain + document processing pipeline | ✅ Done |
-| 3 | PostgreSQL + pgvector + vector search | ⬜ |
+| 3 | PostgreSQL + pgvector + vector search | ✅ Done |
 | 4 | Full RAG pipeline + FastAPI backend | ⬜ |
 | 5 | RAG optimization + evaluation | ⬜ |
 | 6 | AI feature integration into production SaaS | ⬜ |

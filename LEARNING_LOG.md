@@ -185,6 +185,85 @@ Day 11 的任务是跑通完整的 RAG 闭环。用 Chroma（内存向量库）�
 
 **重点**：PostgreSQL + pgvector + 检索
 
+### 学到了什么
+
+**Day 15-16 — PostgreSQL 速通 + JSONB**
+
+有 MySQL 经验，语法差异过一遍就记住了。真正新的只有两个：
+
+`JSONB` 是这周最实用的新东西。RAG 系统里每个文档 chunk 都带 metadata（来源文件、页码、chunk 序号等），用 JSONB 列存储比建很多个单独的列灵活得多。三个核心操作：
+- `->>` 取字段为文本：`metadata->>'source'`
+- `@>` 包含查询：`WHERE metadata @> '{"topic": "rag"}'`
+- `jsonb_set()` 更新嵌套字段
+
+CTE（`WITH ... AS ()`）在 RAG 场景里很常用——先过滤出候选文档，再做向量检索，逻辑分层清晰。
+
+**Day 17 — pgvector 底层操作**
+
+三种距离算子实际跑了一遍，结论很清楚：RAG 用 `<=>` 余弦距离，其他两种了解就行。
+
+索引选择：开发阶段直接用 HNSW，不需要调参，等数据量上百万再考虑 IVFFlat。
+
+这天发现了一个真实 bug：`day17` 的查询函数 `local_embed()` 和 `TextTransformer._LocalEmbeddings` 是两套不同算法，用不同方法生成的向量做余弦检索结果是乱的。修复方法是给 `TextTransformer` 暴露 `embed_query()` 方法，查询和写入用同一个实例。**查询向量和文档向量必须来自同一个 embedding 实例**——这个认识比任何文档都值钱。
+
+**Day 18 — LangChain PGVector**
+
+从手写 SQL 切换到 `PGVector.from_documents()`，接口和 Week 2 的 Chroma 完全一样，只是数据落进了 PostgreSQL。Chroma 是开发阶段的零配置方案，PGVector 是生产方案，切换成本几乎为零。
+
+**Day 19-21 — ETL 接入 PG，完整链路跑通**
+
+Week 3 的终点：ETLPipeline 加入 Load 层，三步完整跑通。
+
+```
+文件 → DocumentExtractor → TextTransformer → PgvectorLoader → PostgreSQL
+```
+
+SQLAlchemy ORM 和 Java JPA 的对应关系一目了然：`@Entity` → `class Document(Base)`，`@Column` → `mapped_column()`，`@ManyToOne` → `relationship()`，语法不同，概念完全一致。
+
+Alembic 暂时不是重点——现在开发阶段有 `sql/init.sql` 就够了，等 Week 7 部署时再回来用。
+
+### 这周最有价值的体验
+
+概念密度是三周里最高的，跑完有点懵。但捋清楚之后发现其实只有两件新事：**pgvector 能在 PG 里存向量、用 `<=>` 找最近邻**，以及**向量空间必须一致**。其他的（ORM、Alembic、索引参数）都是配套设施，用的时候查文档就行。
+
+自己发现 embedding 不一致的 bug 是这周最有价值的收获——说明真的理解了，不是照抄。
+
+### Java / 旧知识 → 新知识的对应
+
+| 旧概念 | 新概念 | 说明 |
+|--------|--------|------|
+| MySQL `TEXT` + 单独字段 | PostgreSQL `JSONB` | 灵活存 metadata，支持索引和嵌套查询 |
+| `SELECT ... ORDER BY score` | `ORDER BY embedding <=> $vec` | 向量相似度检索，语法一样，语义不同 |
+| JPA/Hibernate `@Entity` | SQLAlchemy `mapped_column()` | 代码定义 schema，概念完全一致 |
+| Flyway/Liquibase | Alembic | 数据库版本管理，暂时用不上 |
+
+### 还没搞清楚的
+
+- 真实 Embedding API 的向量和 `_LocalEmbeddings` 的假向量，检索效果差多少？等 Week 4 接上真实 API 再对比。
+- `pgvector` 在数据量上万之后性能怎么样？Week 5 评测时测一下。
+
+### 本周代码
+
+→ [`scripts/week3/`](scripts/week3/) — Day 15-19 学习脚本
+→ [`backend/etl/loaders/`](backend/etl/loaders/) — PgvectorLoader
+→ [`backend/models/`](backend/models/) — SQLAlchemy ORM 模型
+→ [`sql/init.sql`](sql/init.sql) — 表结构 + 索引
+→ [`docker-compose.yml`](docker-compose.yml) — PG + pgvector 容器
+
+---
+
+### 关键收获
+
+Week 3 完成了数据层的闭环：文档能进库、向量能检索。ETLPipeline 现在是完整的三层（Extract → Transform → Load），和 Java 的分层架构思路完全一致。
+
+下周（Week 4）在这个基础上加 FastAPI，把检索变成一个真正能调用的 API 接口。
+
+---
+
+## 第四周
+
+**重点**：FastAPI 后端 + 完整 RAG 问答接口
+
 *即将开始...*
 
 ---

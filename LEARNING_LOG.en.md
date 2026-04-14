@@ -179,6 +179,85 @@ The most visceral experience remains Day 10's manual cosine similarity calculati
 
 **Focus:** PostgreSQL + pgvector + vector search
 
+### What I learned
+
+**Days 15-16 — PostgreSQL crash course + JSONB**
+
+With MySQL experience, syntax differences took an hour to internalize. The only genuinely new thing was `JSONB`.
+
+In a RAG system, every document chunk carries metadata (source file, page number, chunk index, etc.). Storing this in a `JSONB` column is far more flexible than adding individual columns for each field. Three operations that matter:
+- `->>` extracts a field as text: `metadata->>'source'`
+- `@>` containment query: `WHERE metadata @> '{"topic": "rag"}'`
+- `jsonb_set()` updates nested fields
+
+CTEs (`WITH ... AS ()`) pair naturally with RAG queries — filter candidate documents first, then run the vector search. Keeps logic layered and readable.
+
+**Day 17 — pgvector internals**
+
+Ran all three distance operators hands-on. Conclusion is clear: use `<=>` cosine distance for RAG, the other two are situational.
+
+Index selection: HNSW for development (no tuning needed), consider IVFFlat when data exceeds a million rows.
+
+Found a real bug this day: the `local_embed()` helper in `day17` and `TextTransformer._LocalEmbeddings` used two completely different algorithms. Cosine distance between vectors from different embedding functions is meaningless. Fix: expose `embed_query()` on `TextTransformer` so queries and documents always use the same instance. **Query vectors and document vectors must come from the same embedding instance** — this is the most important thing I learned all week, and I found it myself.
+
+**Day 18 — LangChain PGVector**
+
+Switched from hand-written SQL to `PGVector.from_documents()`. The API is identical to Week 2's Chroma — the only difference is data lands in PostgreSQL instead of memory. Chroma is the zero-config development option; PGVector is the production option. Switching costs almost nothing.
+
+**Days 19-21 — ETL wired to PG, full pipeline**
+
+Week 3's finish line: ETLPipeline got its Load layer. Three steps, fully connected:
+
+```
+File → DocumentExtractor → TextTransformer → PgvectorLoader → PostgreSQL
+```
+
+SQLAlchemy ORM maps cleanly to JPA: `@Entity` → `class Document(Base)`, `@Column` → `mapped_column()`, `@ManyToOne` → `relationship()`. Different syntax, identical concept.
+
+Alembic is parked for now — `sql/init.sql` is sufficient for development. It comes back in Week 7 for deployment.
+
+### Most valuable experience this week
+
+Week 3 had the highest concept density of any week so far. Finishing felt disorienting. But after stepping back, it reduces to two things: **pgvector lets you store vectors in Postgres and find nearest neighbors with `<=>`**, and **embedding consistency is non-negotiable**. Everything else (ORM, Alembic, index parameters) is supporting infrastructure — look it up when needed.
+
+Catching the embedding inconsistency bug myself was the most valuable moment of the week. That kind of catch only happens if you actually understand what's going on.
+
+### Java / prior knowledge → new concept mapping
+
+| Prior concept | New concept | Notes |
+|---------------|-------------|-------|
+| MySQL `TEXT` + separate columns | PostgreSQL `JSONB` | Flexible metadata storage with index support |
+| `ORDER BY score DESC` | `ORDER BY embedding <=> $vec` | Vector similarity search, same SQL shape |
+| JPA/Hibernate `@Entity` | SQLAlchemy `mapped_column()` | Code-first schema, same concept |
+| Flyway/Liquibase | Alembic | DB version management, parked until Week 7 |
+
+### Still fuzzy on
+
+- How much retrieval quality difference is there between real embeddings and `_LocalEmbeddings`? Will compare in Week 4 when the real API is wired in.
+- pgvector performance at 10k+ rows — Week 5 evaluation will cover this.
+
+### Code from this week
+
+→ [`scripts/week3/`](scripts/week3/) — Day 15-19 exercises
+→ [`backend/etl/loaders/`](backend/etl/loaders/) — PgvectorLoader
+→ [`backend/models/`](backend/models/) — SQLAlchemy ORM models
+→ [`sql/init.sql`](sql/init.sql) — table schema + indexes
+→ [`docker-compose.yml`](docker-compose.yml) — PG + pgvector container
+
+---
+
+### Key takeaway
+
+Week 3 closed the data layer loop: documents can be stored, vectors can be retrieved. ETLPipeline is now a complete three-layer system (Extract → Transform → Load), mirroring Java's layered architecture directly.
+
+Week 4 builds on top: FastAPI turns the retrieval into a callable API.
+
+---
+
+## Week 4
+
+**Focus:** FastAPI backend + complete RAG query API
+
 *Coming soon...*
 
 ---

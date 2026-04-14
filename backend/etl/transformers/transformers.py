@@ -45,6 +45,10 @@ class TextTransformer():
         # 如需启用真实嵌入，可在未来按需调整为可配置开关
         self.embeddings = _LocalEmbeddings(dim=1536)
 
+    def embed_query(self, text: str) -> List[float]:
+        """生成查询向量，和 transform() 使用同一个 embedding 实例，保证向量空间一致。"""
+        return self.embeddings.embed_documents([text])[0]
+
     def transform(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         输入：提取器的输出
