@@ -44,7 +44,7 @@ Stack: Python · FastAPI · LangChain · PostgreSQL · pgvector · Next.js · Do
 | 1 | Python speed run + Claude API + Prompt Engineering | ✅ Done |
 | 2 | LangChain + document processing pipeline | ✅ Done |
 | 3 | PostgreSQL + pgvector + vector search | ✅ Done |
-| 4 | Full RAG pipeline + FastAPI backend | ⬜ |
+| 4 | Full RAG pipeline + FastAPI backend | ✅ Done |
 | 5 | RAG optimization + evaluation | ⬜ |
 | 6 | AI feature integration into production SaaS | ⬜ |
 | 7 | Docker deployment + CI/CD | ⬜ |
@@ -60,7 +60,7 @@ Weekly notes on what clicked, what didn't, and how it maps to my Java background
 
 **Recent entries:**
 
-- **Week 1** — Python feels familiar once you stop fighting the lack of braces. Claude API multi-turn dialogue clicked immediately — it's stateless, just like HTTP. [Read →](LEARNING_LOG.en.md#week-1)
+- **Week 3** — pgvector reduces to two things: store vectors in Postgres, find nearest neighbors with `<=>`. The real catch is embedding consistency — query and document vectors must come from the same instance. Found that bug myself. [Read →](LEARNING_LOG.en.md#week-3)
 
 ---
 
@@ -75,15 +75,17 @@ zero-to-ai-fullstack/
 │   │   └── loaders/          # Database writers
 │   ├── rag/                  # RAG pipeline
 │   │   ├── embeddings/       # Embedding model wrappers
-│   │   ├── retrieval/        # Vector + hybrid search
-│   │   └── generation/       # LLM integration & prompts
+│   │   ├── retrieval/        # Vector search
+│   │   └── generation/       # RAG chain, LLM integration & prompts
 │   ├── api/                  # FastAPI routes
 │   ├── models/               # SQLAlchemy ORM models
 │   └── prompts/              # Prompt templates (versioned)
 ├── frontend/                 # Next.js app
 ├── scripts/                  # Weekly learning exercises
 │   ├── week1/                # Python basics + Claude API chatbot
-│   └── week2/                # LangChain + document pipeline
+│   ├── week2/                # LangChain + document pipeline
+│   ├── week3/                # PostgreSQL + pgvector + retrieval
+│   └── week4/                # RAG chain end-to-end demo
 ├── sql/                      # Alembic migrations
 ├── docker-compose.yml
 ├── .env.example
@@ -99,17 +101,22 @@ git clone https://github.com/yanhua1010/zero-to-ai-fullstack.git
 cd zero-to-ai-fullstack
 cp .env.example .env
 
+# Start PostgreSQL + pgvector
+docker compose up -d
+
 # Install dependencies (requires uv)
 uv sync
 
-# Start backend
-uv run uvicorn backend.main:app --reload
+# Start the API — interactive docs at http://localhost:8000/docs
+uv run uvicorn backend.api.main:app --reload
 
-# Or with Docker (Week 7+)
-docker compose up -d
+# Run the test suite
+uv run pytest backend/
 ```
 
 Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+Full-stack Docker setup (backend + frontend in containers) lands in Week 7.
 
 ---
 

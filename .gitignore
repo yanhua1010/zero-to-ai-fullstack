@@ -28,6 +28,9 @@ frontend/out/
 .idea/
 *.swp
 
+# Claude / Cowork 本地设置
+.claude/settings.local.json
+
 # macOS
 .DS_Store
 
