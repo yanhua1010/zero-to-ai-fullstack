@@ -1,5 +1,4 @@
-from langchain_anthropic import ChatAnthropic
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings  # ChatOpenAI 用来调 DeepSeek
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 

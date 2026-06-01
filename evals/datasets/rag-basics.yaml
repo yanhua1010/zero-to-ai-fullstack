@@ -1,0 +1,97 @@
+# RAG 基础概念评测集
+#
+# 字段说明：
+#   id                 唯一标识，方便指标按题目展开看
+#   question           评测时喂给 RAG 系统的查询
+#   reference_answer   人工写的标准答案，给 Judge 模型比对用
+#   required_sources   召回率判定依据：每条 = {source, must_contain_any: [keywords]}
+#                      检索结果里只要有一个 chunk 同时满足 "source 命中" 和
+#                      "text 含其中任意关键词"，就算这条 required_source 命中。
+#
+# 设计原则：
+# - 每个问题的答案都直接出自 corpus，不依赖外部知识
+# - 关键词选择"语义代表词"而非生僻搭配，避免分块边界把它们切碎
+# - 问题难度有梯度：q1/q4 单 chunk 直答；q2/q5/q8 需要 2 个 chunk 综合
+
+corpus: rag-concepts.md
+
+questions:
+  - id: q1
+    question: 什么是 RAG？
+    reference_answer: >
+      RAG 是 Retrieval-Augmented Generation 的缩写（检索增强生成），
+      一种把信息检索和大语言模型生成结合起来的架构。系统先把用户问题转成向量、
+      在向量库里找语义最相关的文档片段，再把这些片段连同问题一起交给 LLM 生成回答。
+      目的是把外部知识注入 LLM 的上下文，提升回答准确性、减少幻觉。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: [Retrieval-Augmented, 检索增强生成]
+
+  - id: q2
+    question: RAG 和微调相比有什么优势？
+    reference_answer: >
+      微调适合改变模型行为或语气，更新知识成本高、周期长。RAG 适合知识频繁变化的场景，
+      因为更新只需重跑 ETL 管道，不用碰模型本身。绝大多数业务问答场景，RAG 性价比更高。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: [微调, ETL 管道]
+
+  - id: q3
+    question: RAG 系统运行时分成哪几个阶段？分别做什么？
+    reference_answer: >
+      两个阶段。检索阶段把用户问题转成向量、在向量库里找出语义最接近的文档片段
+      （通常取 top-3 到 top-5）。生成阶段把这些片段连同原始问题组装成 Prompt，
+      交给 LLM 生成答案。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: [检索阶段, 生成阶段]
+
+  - id: q4
+    question: Embedding 是什么？维度通常是多少？
+    reference_answer: >
+      Embedding 是把一段文本映射成高维向量的过程，典型维度 1536
+      （对应 OpenAI text-embedding-3-small）。向量编码语义信息——
+      意思相近的文本生成的向量在高维空间里距离也近。RAG 的语义检索就是靠它实现的。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: ["1536", 高维向量]
+
+  - id: q5
+    question: pgvector 提供了哪几种距离算子？RAG 应该用哪一种，为什么？
+    reference_answer: >
+      pgvector 提供三种距离算子：余弦距离 `<=>`、欧式距离 `<->`、负内积 `<#>`。
+      RAG 场景用 `<=>` 余弦距离最合适，因为它衡量的是向量方向上的相似度，
+      和语义相似的概念最匹配。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: ["<=>", 余弦距离]
+
+  - id: q6
+    question: 为什么 RAG 系统的回答必须标注来源？
+    reference_answer: >
+      两条理由。第一，让用户能核实答案是否可信——没有出处的 AI 回答和直接问模型没区别。
+      第二，模型答错时能快速定位到底是哪段文档误导了它，这是日常调优最重要的入口。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: [核实, 调优]
+
+  - id: q7
+    question: 调优 RAG 系统时应该优先看什么？
+    reference_answer: >
+      优先看检索质量。RAG 的回答上限完全由检索决定，检索没把对的文档找出来，
+      再强的生成模型也只能基于错的上下文作答。先确认检索召回准确，再去优化 Prompt
+      或换更强的生成模型。把精力花在调 Prompt 上而忽视检索，是最常见的错误优化方向。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: [检索质量, 上限]
+
+  - id: q8
+    question: 多轮对话里的指代问题怎么处理？
+    reference_answer: >
+      用户经常用"它""这个"指代前文，RAG 链需要把对话历史一起带给模型才能理解指代。
+      工程上常用的做法是"问题重写"——把当前问题和历史一起送进 LLM，
+      让模型输出一个独立、不含代词的新问题，再拿这个新问题去做向量检索，
+      检索质量会显著提高。
+    required_sources:
+      - source: rag-concepts.md
+        must_contain_any: [问题重写, 代词]

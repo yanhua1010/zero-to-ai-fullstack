@@ -73,7 +73,7 @@ class PgVectorRetriever:
                 text("""
                     SELECT
                         dc.chunk_text,
-                        dc.metadata_,
+                        dc.metadata AS metadata_,
                         dc.chunk_index,
                         ROUND((dc.embedding <=> :vec)::numeric, 4) AS score,
                         d.title  AS doc_title,

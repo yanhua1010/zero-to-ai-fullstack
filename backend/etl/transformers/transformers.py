@@ -32,8 +32,31 @@ except Exception:  # pragma: no cover - 测试环境下使用本地嵌入
 
 logger = logging.getLogger(__name__)
 
+# 默认 embedding 模型。OpenAI 官方 text-embedding-3-small 是 1536 维,
+# 正好和项目 DB schema 的 vector(1536) 对得上。
+# 用 OpenAI 兼容代理(阿里通义、智谱等)时如果走其他模型,通过环境变量
+# EMBEDDING_MODEL 覆盖即可,但务必确认输出维度仍是 1536,否则要同步改
+# sql/init.sql 和 models.py 里的 vector 维度。
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
+
+
+def _openai_key_available() -> bool:
+    """判断是否配置了可用的 OpenAI(兼容)API Key。占位符值视为未配置。"""
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+    return key not in {"", "your_openai_api_key_here", "sk-..."}
+
+
 class TextTransformer():
-    """文本转换器：分块 + 向量化"""
+    """文本转换器:分块 + 向量化。
+
+    Embedding 选择策略(和 chain.py / judge.py 一脉相承):
+    - 有 OPENAI_API_KEY 且 langchain-openai 可用 → 真 OpenAI(兼容)嵌入,
+      base_url 走 OPENAI_BASE_URL 可指向任何兼容代理
+    - 没有 → 本地 SHA256 降级,1536 维,语义为零,只保证代码能跑
+
+    重要约束:换 embedding 实例意味着向量空间换了,**之前灌进 DB 的向量会作废**,
+    要把那个知识库清空重灌(eval-rag-basics 的 day29 脚本已经自动做这件事)。
+    """
 
     def __init__(self, chunk_size: int = 500, chunk_overlap: int = 50):
         self.splitter = RecursiveCharacterTextSplitter(
@@ -41,9 +64,24 @@ class TextTransformer():
             chunk_overlap=chunk_overlap,
         )
 
-        # 为避免测试/本地环境触发外部网络依赖，统一使用本地降级嵌入
-        # 如需启用真实嵌入，可在未来按需调整为可配置开关
-        self.embeddings = _LocalEmbeddings(dim=1536)
+        if _openai_key_available() and OpenAIEmbeddings is not None:
+            model = os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+            base_url = os.getenv("OPENAI_BASE_URL") or None
+            self.embeddings = OpenAIEmbeddings(
+                model=model,
+                api_key=os.getenv("OPENAI_API_KEY"),
+                base_url=base_url,
+            )
+            logger.info(
+                f"[TextTransformer] 使用 OpenAI(兼容)嵌入: model={model}, "
+                f"base_url={base_url or '官方默认 (api.openai.com)'}"
+            )
+        else:
+            self.embeddings = _LocalEmbeddings(dim=1536)
+            logger.warning(
+                "[TextTransformer] 未检测到 OPENAI_API_KEY,使用本地 SHA256 降级嵌入。"
+                "语义检索基本无效,只用于跑通流程。生产/评测请配 OPENAI_API_KEY。"
+            )
 
     def embed_query(self, text: str) -> List[float]:
         """生成查询向量，和 transform() 使用同一个 embedding 实例，保证向量空间一致。"""

@@ -5,7 +5,7 @@ FastAPI 接口测试。
 - 不依赖 DB 的：健康检查、请求体校验、文件类型校验 —— 任何环境都能跑
 - 依赖 DB 的：增删查改 —— 加 live_db fixture 守门，没起 Postgres 就跳过
 
-依赖 DB 的测试一律强制降级模式（删掉 ANTHROPIC_API_KEY），
+依赖 DB 的测试一律强制降级模式（删掉 DEEPSEEK_API_KEY），
 保证测试不会真的去调 LLM：不花钱、不依赖网络、结果可重复。
 
 对照 Java：TestClient 相当于 Spring 的 MockMvc —— 不真的起 HTTP 端口，
@@ -97,7 +97,7 @@ def test_upload_document_runs_etl(live_db, kb_name):
 def test_chat_flow_and_conversation_persisted(live_db, kb_name, monkeypatch):
     """灌一篇文档 → SSE 问答 → 历史接口能查到这轮对话。"""
     # 强制降级，测试不调真 LLM
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
 
     # 先灌一篇文档进知识库
     content = "# RAG\n\nRAG 先检索再生成，检索质量决定回答上限。".encode("utf-8")

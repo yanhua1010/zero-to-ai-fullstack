@@ -2,7 +2,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI  # 用来调 DeepSeek（OpenAI 兼容协议）
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
@@ -15,10 +15,10 @@ embeddings = OpenAIEmbeddings(
     base_url=os.getenv("OPENAI_BASE_URL"),
 )
 
-llm = ChatAnthropic(
-    model="claude-sonnet-4-6",
-    api_key=os.getenv("ANTHROPIC_API_KEY"),
-    base_url=os.getenv("ANTHROPIC_BASE_URL"),
+llm = ChatOpenAI(
+    model="deepseek-v4-flash",
+    api_key=os.getenv("DEEPSEEK_API_KEY"),
+    base_url=os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com",
 )
 
 

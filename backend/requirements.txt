@@ -8,12 +8,12 @@ alembic>=1.13.0
 psycopg2-binary>=2.9.9
 pgvector>=0.2.5
 
-# LLM & RAG
-anthropic>=0.25.0
+# LLM & RAG（DeepSeek 走 OpenAI 兼容协议，所以只需要 openai SDK）
 openai>=1.30.0
 langchain>=0.2.0
-langchain-anthropic>=0.1.0
 langchain-community>=0.2.0
+langchain-openai>=0.1.0
+pyyaml>=6.0
 
 # Document processing
 pypdf>=4.0.0

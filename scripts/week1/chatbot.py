@@ -1,9 +1,16 @@
+"""
+Week 1 入门聊天机器人 —— 多轮对话 + 流式输出 + JSON 解析。
 
-import anthropic
-import os
+调的是 DeepSeek API(OpenAI 兼容协议)。和直接用 openai 官方一样,
+区别只是把 base_url 指到 https://api.deepseek.com。
+"""
+
 import json
-import readline
+import os
+import readline  # noqa: F401  让 input() 支持上下方向键回看历史
+
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -35,9 +42,9 @@ def parse_reply(reply: str) -> dict | None:
 
 
 def chat():
-    client = anthropic.Anthropic(
-        api_key=os.getenv("ANTHROPIC_API_KEY"),
-        base_url=os.getenv("ANTHROPIC_BASE_URL"),  # 如果是官方直连，留空即可
+    client = OpenAI(
+        api_key=os.getenv("DEEPSEEK_API_KEY"),
+        base_url=os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com",
     )
     messages = []
 
@@ -58,15 +65,23 @@ def chat():
 
         reply = ""
         print("AI (raw): ", end="", flush=True)
-        with client.messages.stream(
-            model="anthropic/claude-sonnet-4.6",
+
+        # OpenAI 格式：system 放 messages 数组第一条；stream=True 开流式
+        stream = client.chat.completions.create(
+            model="deepseek-v4-pro",   # Week 1 用强一档的 pro，输出质量更稳
             max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=messages,
-        ) as stream:
-            for text in stream.text_stream:
-                print(text, end="", flush=True)
-                reply += text
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                *messages,
+            ],
+            stream=True,
+        )
+        for chunk in stream:
+            # 每个 chunk 的增量文本在 chunk.choices[0].delta.content（可能为 None）
+            delta = chunk.choices[0].delta.content
+            if delta:
+                print(delta, end="", flush=True)
+                reply += delta
         print()
 
         messages.append({"role": "assistant", "content": reply})

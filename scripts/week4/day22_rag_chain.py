@@ -8,14 +8,14 @@ Day 22 要补上最后一段：把 chunk 喂给 LLM，生成带来源的自然�
     问题
       → PgVectorRetriever.retrieve()      检索相关 chunk
       → prompts.build_user_message()      拼成带上下文的 Prompt
-      → Claude API（或本地降级模式）       生成答案
+      → DeepSeek API（或本地降级模式）     生成答案
       → RAGChain 统一返回 {answer, sources, ...}
 
 运行方式：
     docker compose up -d            # 先把数据库起起来
     uv run python scripts/week4/day22_rag_chain.py
 
-说明：没配 ANTHROPIC_API_KEY 也能跑 —— RAGChain 会自动进入"本地降级模式"，
+说明：没配 DEEPSEEK_API_KEY 也能跑 —— RAGChain 会自动进入"本地降级模式"，
 只检索、不调用 LLM，把检索到的原文摊开返回。链路一样是通的。
 """
 

@@ -9,7 +9,7 @@ RAGChain.__init__ 里 retriever 的 create_engine 是惰性的，构造时不会
 为什么强制降级：
 pytest.ini 配了 env_files = .env，如果你的 .env 里有真 API Key，
 不强制降级测试就会真的去调 LLM —— 又慢又花钱又不可重复。
-所以 fixture 里先 delenv 掉 ANTHROPIC_API_KEY。
+所以 fixture 里先 delenv 掉 DEEPSEEK_API_KEY。
 """
 
 import pytest
@@ -29,7 +29,7 @@ FAKE_CHUNKS = [
 @pytest.fixture
 def chain(monkeypatch):
     """一个强制降级、retriever 被换成假数据的 RAGChain。"""
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     c = RAGChain(kb_name="test-kb")
     monkeypatch.setattr(c.retriever, "retrieve", lambda q: list(FAKE_CHUNKS))
     monkeypatch.setattr(
@@ -103,7 +103,7 @@ def test_ask_stream_event_sequence(chain):
 # ── max_score 分支 ────────────────────────────────────────────────────────────
 def test_max_score_uses_filter(monkeypatch):
     """设了 max_score 时应走带过滤的检索方法，而不是普通 retrieve。"""
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     c = RAGChain(kb_name="test-kb", max_score=0.5)
     called = {}
     monkeypatch.setattr(
@@ -121,12 +121,12 @@ def test_max_score_uses_filter(monkeypatch):
 # ── _api_key_available 工具函数 ───────────────────────────────────────────────
 @pytest.mark.parametrize("value,expected", [
     ("", False),
-    ("your_anthropic_api_key_here", False),  # .env.example 的占位符
-    ("sk-ant-...", False),                   # 进度文档里的占位符
-    ("sk-ant-real-key-xxx", True),
+    ("your_deepseek_api_key_here", False),   # .env.example 的占位符
+    ("sk-...", False),                       # 文档里的通用占位符
+    ("sk-real-key-xxx", True),
 ])
 def test_api_key_available(monkeypatch, value, expected):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", value)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", value)
     assert _api_key_available() is expected
 
 

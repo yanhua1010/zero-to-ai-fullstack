@@ -1,4 +1,4 @@
-from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 import os
 from dotenv import load_dotenv
@@ -6,10 +6,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 load_dotenv()
 
-llm = ChatAnthropic(
-    model="claude-sonnet-4-6",
-    api_key=os.getenv("ANTHROPIC_API_KEY"),
-    base_url=os.getenv("ANTHROPIC_BASE_URL"),
+# DeepSeek 走 OpenAI 兼容协议，所以用 ChatOpenAI + 改 base_url
+llm = ChatOpenAI(
+    model="deepseek-v4-flash",
+    api_key=os.getenv("DEEPSEEK_API_KEY"),
+    base_url=os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com",
 )
 
 prompt =  ChatPromptTemplate.from_messages([
@@ -44,4 +45,3 @@ docs = loader.load()
 print(f"加载了{len(docs)}个文档")
 print(f"内容前200个字：{docs[0].page_content[:200]}")
 print(f"元数据：{docs[0].metadata}")
-

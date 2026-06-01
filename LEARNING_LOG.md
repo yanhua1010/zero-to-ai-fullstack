@@ -268,6 +268,80 @@ Week 3 完成了数据层的闭环：文档能进库、向量能检索。ETLPipe
 
 ---
 
+## 第五周
+
+**重点**：RAG 评测体系 + Embedding 升级
+
+### 学到了什么
+
+**评测体系的核心：三个指标 + LLM-as-Judge**
+
+搭一套 RAG 评测，本质就是回答三个问题：
+
+1. **检索把对的文档找出来了吗？**（召回率 Recall）—— 纯字符串 + source 匹配，无需 LLM。这是 RAG 上限。
+2. **生成的答案对吗？**（回答准确性 Accuracy）—— 用一个更强的 LLM 当裁判，跟标答比对打分。
+3. **生成有没有瞎编？**（幻觉率 Hallucination Rate）—— 让裁判把答案拆成事实声明，逐条对照检索到的 chunks 判 supported / unsupported。
+
+后两个就是 **LLM-as-Judge**，行业（RAGAS / TruLens / DeepEval）的标准做法。
+
+味道很像 JMH 性能基准 + 集成测试的组合。JMH 量"代码改完后性能有没有变好"，评测集量"RAG 改完后答案有没有变好"。**没有评测就调优，等于没基准跑 JMH，凭感觉说快了**。
+
+**最大的发现：换 embedding 直接救了整条 RAG**
+
+Baseline 用 `_LocalEmbeddings`（SHA256 假向量，1536 维但数值无语义）跑出来：召回 62.5%、准确 57.5%、幻觉 50%。本来下一步打算上混合检索 / Reranking 调，但先把 embedding 换成 OpenAI `text-embedding-3-small` 真嵌入再跑：
+
+| 指标 | SHA256 | OpenAI | 变化 |
+|------|--------|--------|------|
+| 召回率 | 62.5% | 100% | +37.5pp |
+| 准确性 | 57.5% | 93.75% | +36.25pp |
+| 幻觉率（↓好） | 50% | 0% | -50pp |
+
+**没动 prompt、没换生成模型、没加 reranking，只换 embedding，后两个指标自动跟着涨**。这就是"RAG 上限就是检索"这句话最直观的实证。
+
+**LLM 厂商切换 + JSON Output**
+
+期间把整个项目从 Claude API（Anthropic SDK）迁到 DeepSeek。DeepSeek 是 OpenAI 兼容协议，用 `openai` SDK + 改 `base_url` 就行，干净卸掉了 anthropic 依赖。生成用 deepseek-v4-flash，Judge 用 deepseek-v4-pro —— **裁判模型必须比被测模型强一档**是 LLM-as-Judge 的硬规矩，不然评分本身可信度不够。
+
+DeepSeek 的 JSON Output 模式（`response_format={"type":"json_object"}`）解决了 Judge 偶发返回非 JSON 导致解析失败的问题（baseline 跑时幻觉率有 5/8 道题"未测"，就是这个原因）。
+
+### Java / 旧知识 → 新知识的对应
+
+| 旧概念 | 新概念 | 说明 |
+|--------|--------|------|
+| JMH 性能基准 + JUnit | 评测集 + Recall / Accuracy / Hallucination | 量化改动的影响，不靠"我觉得变好了" |
+| MockMvc.perform(...).andExpect(...) | LLM-as-Judge | 把"判答案对不对"外包给一个更强的角色 |
+| `@Profile("dev")` 走假数据源 | `_LocalEmbeddings` 降级 | 缺真实依赖时让代码能跑，但要清楚知道结果是假的 |
+| Spring 切换数据源 | openai SDK 换 base_url 切 LLM 厂商 | DeepSeek / 阿里 / 智谱都是 OpenAI 兼容协议，抽象层做好后换厂商几乎零成本 |
+
+### 这周最有价值的判断：为什么**没**做混合检索 / Reranking
+
+原计划是"混合检索（BM25 + 向量 + RRF）→ Reranking → MMR"三件套。Baseline 跑出召回率 100% 后，停下来问了一句：**这三件事在当前 corpus 上还是不是杠杆点？**
+
+不是。召回率已经满，混合检索的天花板就在那。再花一天做：
+- 收益：0%（天花板就是 100%）
+- 成本：1 天
+- 代价：推迟 Week 6（8 周计划里最重要的一周 —— 把 AI 接进 reddtrends.com 生产）
+
+**所以主动跳过了**。面试时被问"做过混合检索吗"，能讲清楚原理 + 评测过收益不是杠杆点 + 说出把时间挪去做了更重要的事 —— 这比"做过"更显工程判断力。
+
+这周最有价值的不是新搭了什么，是**养出了"先量再调"的工程纪律**：没有数据就不调优。这跟 Java 后端调优一脉相承。
+
+### 还没搞清楚的
+
+- 评测集只有 8 题，样本太小，后期接 reddtrends 真业务数据时要扩到 20-30 题、覆盖更多题型（单跳 / 多跳 / 不在知识库里的题）。
+- LLM-as-Judge 自己也有偏见，理论上应该跑多次取平均 / 或多个不同 judge 投票，这次省了。
+
+### 本周代码
+
+→ [`backend/eval/`](backend/eval/) — 评测模块（metrics / judge / runner / report）
+→ [`evals/`](evals/) — 评测语料 + 数据集
+→ [`scripts/week5/day29_eval_baseline.py`](scripts/week5/day29_eval_baseline.py) — baseline 脚本
+→ [`docs/rag-eval.md`](docs/rag-eval.md) — 评测报告
+→ [`backend/etl/transformers/transformers.py`](backend/etl/transformers/transformers.py) — 加了 OpenAI 真嵌入自动切换
+→ [`backend/rag/generation/chain.py`](backend/rag/generation/chain.py) + [`backend/eval/judge.py`](backend/eval/judge.py) — 全切到 DeepSeek
+
+---
+
 <!-- 后续周次模板：
 
 ## 第 N 周
